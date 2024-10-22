@@ -30,7 +30,6 @@ from .tensor_functions import (
     Sigmoid,
     Sum,
     View,
-    tensor,
 )
 
 if TYPE_CHECKING:
@@ -98,6 +97,7 @@ class Tensor:
         """Set whether the tensor requires gradient computation.
 
         Args:
+        ----
             x (bool): If True, the tensor will track gradients.
 
         """
@@ -201,17 +201,18 @@ class Tensor:
         # END CODE CHANGE (2021)
 
     def zeros(self, shape: Optional[UserShape] = None) -> Tensor:
-        """"Returns a tensor of zeros given a shape
-        
+        """Returns a tensor of zeros given a shape
+
         Args:
         ----
             shape: shape of the zeroes Tensor.
-        
+
         Returns:
         -------
             A tensor of zeros given a shape.
-        
+
         """
+
         def zero(shape: UserShape) -> Tensor:
             return Tensor.make(
                 [0.0] * int(operators.prod(shape)), shape, backend=self.backend
@@ -223,7 +224,7 @@ class Tensor:
             out = zero(shape)
         out._type_(self.backend)
         return out
-    
+
     def zero_grad_(self) -> None:
         """Sets current gradient to zeros"""
         self.grad = self.zeros()
@@ -266,7 +267,7 @@ class Tensor:
 
     @property
     def parents(self) -> Iterable[Variable]:
-        """"Returns the input of the Tensor."""
+        """Returns the input of the Tensor."""
         assert self.history is not None
         return self.history.inputs
 
@@ -311,35 +312,35 @@ class Tensor:
     def __matmul__(self, b: Tensor) -> Tensor:
         """Not used until Module 3"""
         return MatMul.apply(self, self._ensure_tensor(b))
-    
+
     def __eq__(self, b: Tensor) -> Tensor:
-        """"Checks if 2 Tensors are equal"""
+        """Checks if 2 Tensors are equal"""
         return EQ.apply(self, self._ensure_tensor(b))
-    
+
     def __add__(self, b: Tensor) -> Tensor:
         return Add.apply(self, self._ensure_tensor(b))
-    
+
     def __sub__(self, b: Tensor) -> Tensor:
         return Add.apply(self, Neg.apply(self._ensure_tensor(b)))
-    
+
     def __mul__(self, b: Tensor) -> Tensor:
         return Mul.apply(self, self._ensure_tensor(b))
-    
+
     def __lt__(self, b: Tensor) -> Tensor:
-        return LT.apply(self,self._ensure_tensor(b))
-    
+        return LT.apply(self, self._ensure_tensor(b))
+
     def __gt__(self, b: Tensor) -> Tensor:
         return LT.apply(self._ensure_tensor(b), self)
-    
+
     def __neg__(self) -> Tensor:
         return Neg.apply(self)
-    
+
     def __radd__(self, b: Tensor) -> Tensor:
         return Add.apply(self, self._ensure_tensor(b))
-    
+
     def __rmul__(self, b: Tensor) -> Tensor:
         return Mul.apply(self, self._ensure_tensor(b))
-    
+
     def all(self, dim: Optional[Tensor] = None) -> Tensor:
         """Returns 1 if all elements in Tensor are true."""
         if dim is None:
@@ -349,7 +350,7 @@ class Tensor:
     def sigmoid(self) -> Tensor:
         """Returns Sigmoid map of Tensor."""
         return Sigmoid.apply(self)
-    
+
     def relu(self) -> Tensor:
         """Returns ReLU map of Tensor."""
         return ReLU.apply(self)
@@ -361,11 +362,11 @@ class Tensor:
     def exp(self) -> Tensor:
         """Returns Exp of Tensor."""
         return Exp.apply(self)
-    
+
     def is_close(self, b: Tensor) -> Tensor:
         """Checks if 2 Tensors are close"""
         return IsClose.apply(self, self._ensure_tensor(b))
-    
+
     def sum(self, dim: Optional[Tensor | int] = None) -> Tensor:
         """Sum over a dimension of the Tensor. If dims is None, returns the sum over all dimension"""
         if dim is None:
@@ -377,29 +378,38 @@ class Tensor:
                 raise IndexingError(f"Invalid dim. max dim is {self.dims}")
             else:
                 return Sum.apply(self, self._ensure_tensor(dim))
-    
+
     def mean(self, dim: Optional[Tensor | int] = None) -> Tensor:
         """Mean over a dimension of the Tensor"""
-        if dim is None: 
+        if dim is None:
             # Mean over all dimensions
             return Mul.apply(self.sum(), Inv.apply(self._ensure_tensor(self.size)))
         else:
             dim = self._ensure_tensor(dim)
             sum_tensor = self.sum(dim)
-            count =self._ensure_tensor(self.shape[int(dim.item())])
+            count = self._ensure_tensor(self.shape[int(dim.item())])
             return Mul.apply(sum_tensor, Inv.apply(count))
-        
-    
+
     def permute(self, *order: int) -> Tensor:
         """Permute the tensor in a new index order"""
-        return Permute.apply(self, Tensor.make(list(order), (len(order),), backend=self.backend))
-    
-    def view(self, *shape: int, dim: Optional[Tensor] = None) -> Tensor:
+        return Permute.apply(
+            self, Tensor.make(list(order), (len(order),), backend=self.backend)
+        )
+
+    def view(self, *shape: TensorLike, dim: Optional[Tensor] = None) -> Tensor:
         """Returns a new Tensor with a different shape (Add dims to a Tensor)"""
-        if len(shape) == 1 and shape[0] == -1:
-            #returns a 1-D tensor of all elements
+        converted_shape = [
+            int(s.item()) if isinstance(s, Tensor) else int(s) for s in shape
+        ]
+        if len(converted_shape) == 1 and converted_shape[0] == -1:
+            # returns a 1-D tensor of all elements
             return View.apply(self, self._ensure_tensor(self._tensor.size))
-        return View.apply(self, Tensor.make(list(shape), (len(shape),), backend=self.backend))
+        return View.apply(
+            self,
+            Tensor.make(
+                list(converted_shape), (len(converted_shape),), backend=self.backend
+            ),
+        )
 
     @property
     def shape(self) -> UserShape:
@@ -408,14 +418,13 @@ class Tensor:
 
         """
         return self._tensor.shape
-    
+
     @property
     def size(self) -> int:
         """Returns size of the tensor"""
         return self._tensor.size
-    
+
     @property
     def dims(self) -> int:
         """Returns the number of dimension"""
         return self._tensor.dims
-    
