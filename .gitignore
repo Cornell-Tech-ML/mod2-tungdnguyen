@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 *.\#*
 data/
-pyodide.DS_Store
+pyodide
