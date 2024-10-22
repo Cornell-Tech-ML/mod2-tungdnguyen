@@ -20,7 +20,7 @@ The files that will be synced are:
 
 Below are the images of the experiments:
 
-## Simple: 
+## Simple:
 **Time per epoch: 0.075s **- 451 epochs - HIDDEN_SIZE = 3
 ![Image](images/SIMPLE/graph.png)
 ![Graph](images/SIMPLE/graph2.png)
