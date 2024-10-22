@@ -390,7 +390,7 @@ class Tensor:
             count = self._ensure_tensor(self.shape[int(dim.item())])
             return Mul.apply(sum_tensor, Inv.apply(count))
 
-    def permute(self, *order: int) -> Tensor:
+    def permute(self, *order: int, dim: Optional[Tensor] = None) -> Tensor:
         """Permute the tensor in a new index order"""
         return Permute.apply(
             self, Tensor.make(list(order), (len(order),), backend=self.backend)
