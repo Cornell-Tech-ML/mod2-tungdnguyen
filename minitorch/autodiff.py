@@ -100,7 +100,7 @@ def visit(
     if variable.unique_id in visited_variables:
         return
     for parent in variable.parents:
-        if parent.unique_id not in visited_variables:
+        if parent.unique_id not in visited_variables and not parent.is_constant():
             visit(parent, visited_variables, topo_list)
     visited_variables.add(variable.unique_id)
     topo_list.append(variable)
